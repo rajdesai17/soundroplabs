@@ -1,0 +1,223 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* SoundDrop Design System */
+  --bg-base: #0A0A0A;
+  --bg-surface: #111111;
+  --bg-elevated: #1A1A1A;
+  --border-default: #2A2A2A;
+  --border-hover: #444444;
+  --border-accent: #E8F055;
+  --text-primary: #F0F0F0;
+  --text-secondary: #888888;
+  --text-tertiary: #444444;
+  --text-ghost: #222222;
+  --accent: #E8F055;
+  --accent-dim: #B8C040;
+  --danger: #E05A5A;
+  --success: #5AE08A;
+  
+  /* shadcn overrides */
+  --background: #0A0A0A;
+  --foreground: #F0F0F0;
+  --card: #111111;
+  --card-foreground: #F0F0F0;
+  --popover: #111111;
+  --popover-foreground: #F0F0F0;
+  --primary: #E8F055;
+  --primary-foreground: #0A0A0A;
+  --secondary: #1A1A1A;
+  --secondary-foreground: #F0F0F0;
+  --muted: #1A1A1A;
+  --muted-foreground: #888888;
+  --accent: #E8F055;
+  --accent-foreground: #0A0A0A;
+  --destructive: #E05A5A;
+  --destructive-foreground: #F0F0F0;
+  --border: #2A2A2A;
+  --input: #2A2A2A;
+  --ring: #E8F055;
+  --radius: 4px;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist), 'Geist', sans-serif;
+  --font-serif: var(--font-instrument-serif), 'Instrument Serif', serif;
+  --font-mono: var(--font-dm-mono), 'DM Mono', monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius));
+  --radius-md: calc(var(--radius));
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
+  
+  /* Custom colors for SoundDrop */
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-border-default: var(--border-default);
+  --color-border-hover: var(--border-hover);
+  --color-border-accent: var(--border-accent);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-ghost: var(--text-ghost);
+  --color-sd-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    @apply bg-bg-base text-text-primary font-sans antialiased;
+  }
+  
+  ::selection {
+    background: #E8F055;
+    color: #0A0A0A;
+  }
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOutUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes waveformPulse {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.6);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 300ms ease-out forwards;
+}
+
+.animate-fade-out-up {
+  animation: fadeOutUp 250ms ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 200ms ease-out forwards;
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Waveform bar animation */
+.waveform-bar {
+  transform-origin: bottom;
+  animation: waveformPulse 0.8s ease-in-out infinite;
+}
+
+.waveform-bar:nth-child(2n) {
+  animation-delay: 0.1s;
+}
+
+.waveform-bar:nth-child(3n) {
+  animation-delay: 0.2s;
+}
+
+.waveform-bar:nth-child(4n) {
+  animation-delay: 0.3s;
+}
+
+.waveform-bar:nth-child(5n) {
+  animation-delay: 0.15s;
+}
