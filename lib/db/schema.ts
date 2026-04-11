@@ -50,6 +50,29 @@ export const libraryEntries = pgTable('library_entries', {
   savedAt: timestamp('saved_at').defaultNow().notNull(),
 })
 
+export const scenes = pgTable('scenes', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id').references(() => users.id),
+  description: text('description').notNull(),
+  isPublic: boolean('is_public').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
+export const sceneLayers = pgTable('scene_layers', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  sceneId: text('scene_id').references(() => scenes.id).notNull(),
+  layerType: varchar('layer_type', { length: 20 }).notNull(),
+  query: text('query').notNull(),
+  enrichedPrompt: text('enriched_prompt'),
+  neighbors: jsonb('neighbors').$type<NeighborJson[]>(),
+  audioUrl: text('audio_url'),
+  waveformData: jsonb('waveform_data').$type<number[]>(),
+  duration: real('duration'),
+  status: varchar('status', { length: 20 }).default('pending').notNull(),
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+})
+
 // JSON type for neighbors stored in generation_jobs
 interface NeighborJson {
   id: string

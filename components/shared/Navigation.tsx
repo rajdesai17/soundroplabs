@@ -26,6 +26,7 @@ export default function Navigation({ user, onSignInClick }: NavigationProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const navLinks = [
+    { href: '/scene', label: 'Scene' },
     { href: '/gallery', label: 'Gallery' },
     { href: '/library', label: 'Library' },
   ]

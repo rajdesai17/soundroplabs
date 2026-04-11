@@ -252,3 +252,32 @@ export function getCardFrequency(index: number): number {
   const frequencies = [220, 277, 330, 392, 440, 523, 587, 659, 740, 880]
   return frequencies[index % frequencies.length]
 }
+
+// Scene Mode mock data
+import type { SceneLayerSpec, SceneLayerResult } from './scene-types'
+
+export const mockSceneDecomposition: SceneLayerSpec[] = [
+  { type: 'ambience', query: 'Gentle rain falling on stone temple courtyard at night, steady patter on ancient stone', reasoning: 'Sets the ambient bed of the rainy night scene' },
+  { type: 'foreground', query: 'Wooden wind chimes clinking softly in a gentle breeze, close perspective', reasoning: 'Close-up foreground element adding detail' },
+  { type: 'background', query: 'Distant temple bells ringing slowly through fog, deep resonance fading', reasoning: 'Background depth element placing the scene at a temple' },
+  { type: 'music', query: 'Meditative ambient koto and flute, slow and peaceful, Japanese atmosphere', reasoning: 'Musical underscore matching the contemplative mood' },
+]
+
+export function generateMockSceneLayers(): SceneLayerResult[] {
+  return mockSceneDecomposition.map(layer => ({
+    type: layer.type,
+    query: layer.query,
+    enrichedPrompt: `Enhanced: ${layer.query}`,
+    neighbors: mockNeighbors.slice(0, 4),
+    audioUrl: `/mock-audio-${layer.type}.mp3`,
+    waveformData: generateWaveformData(),
+    duration: layer.type === 'music' ? 30 : 10,
+    status: 'complete' as const,
+  }))
+}
+
+export const exampleScenes = [
+  'Rainy night at a Japanese temple',
+  'Busy spaceship bridge during a battle',
+  'Morning in a forest cabin with a crackling fire',
+]
