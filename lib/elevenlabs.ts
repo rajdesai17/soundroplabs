@@ -5,7 +5,9 @@ export async function generateSoundEffect(
   prompt: string,
   duration: number | null
 ): Promise<Buffer> {
-  const body: Record<string, unknown> = { text: prompt }
+  // ElevenLabs SFX has a 450 char limit
+  const truncatedPrompt = prompt.length > 440 ? prompt.slice(0, 440) + '...' : prompt
+  const body: Record<string, unknown> = { text: truncatedPrompt }
   if (duration != null) {
     body.duration_seconds = duration
   }

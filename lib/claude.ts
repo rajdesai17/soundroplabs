@@ -1,7 +1,5 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { generateText } from 'ai'
 import { Neighbor } from './types'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 const SYSTEM_PROMPT = `You are an expert sound designer who creates detailed, vivid prompts for AI sound effects generators.
 
@@ -11,7 +9,7 @@ Guidelines:
 - Include specific acoustic details: texture, material, space, distance, resonance
 - Reference timing and rhythm if relevant
 - Describe the sound's character: bright/dark, sharp/soft, metallic/organic
-- Keep under 150 words
+- Keep under 80 words and under 400 characters (STRICT LIMIT — ElevenLabs rejects longer prompts)
 - Output ONLY the enhanced prompt text, nothing else`
 
 export async function enrichPrompt(
@@ -35,11 +33,12 @@ ${durationNote}
 
 Create an enhanced, detailed prompt for generating this sound effect.`
 
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.0-flash',
-    systemInstruction: SYSTEM_PROMPT,
+  const { text } = await generateText({
+    model: 'google/gemini-2.0-flash',
+    system: SYSTEM_PROMPT,
+    prompt: userMessage,
+    maxTokens: 300,
   })
 
-  const result = await model.generateContent(userMessage)
-  return result.response.text() || query
+  return text || query
 }

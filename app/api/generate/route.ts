@@ -16,7 +16,7 @@ function isMockMode(): boolean {
   return (
     !process.env.TURBOPUFFER_API_KEY ||
     !process.env.ELEVENLABS_API_KEY ||
-    !process.env.GEMINI_API_KEY ||
+    !process.env.AI_GATEWAY_API_KEY ||
     !process.env.BLOB_READ_WRITE_TOKEN
   )
 }
@@ -80,8 +80,14 @@ export async function GET(request: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      let closed = false
       const send = (data: Record<string, unknown>) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+        if (closed) return
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+        } catch {
+          closed = true
+        }
       }
 
       try {
