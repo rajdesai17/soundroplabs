@@ -23,10 +23,13 @@ export default function LandingPage() {
 
       {/* ─── HERO ─── */}
       <section className="flex flex-col items-center justify-center px-4 pt-28 pb-20 md:pt-36 md:pb-28">
-        <div className="flex items-center gap-4 mb-8 animate-fade-in-up opacity-50">
-          <img src="/lockup_dark.svg" alt="turbopuffer" className="h-5" />
-          <span className="font-mono text-xs text-text-tertiary">+</span>
-          <img src="/elevenlabs-logo.svg" alt="ElevenLabs" className="h-3 invert" />
+        <div className="flex flex-col items-center gap-3 mb-8 animate-fade-in-up">
+          <div className="flex items-center gap-4 opacity-50">
+            <img src="/lockup_dark.svg" alt="turbopuffer" className="h-5" />
+            <span className="font-mono text-xs text-text-tertiary">+</span>
+            <img src="/elevenlabs-logo.svg" alt="ElevenLabs" className="h-3 invert" />
+          </div>
+          <span className="font-mono text-[11px] text-sd-accent tracking-wide">#ElevenHacks</span>
         </div>
 
         <h1
