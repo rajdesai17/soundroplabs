@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Play, Pause } from 'lucide-react'
 import WaveformThumbnail from './WaveformThumbnail'
-import { formatDuration } from '@/lib/waveformUtils'
+import { formatDuration, formatPlayCount } from '@/lib/waveformUtils'
 import { SoundEntry, Category } from '@/lib/types'
 
 function getPlayableUrl(audioUrl: string): string {
@@ -70,6 +70,13 @@ export default function SoundCard({
       setIsPlaying(false)
     })
     setIsPlaying(true)
+
+    // Track play count (fire-and-forget)
+    fetch('/api/play', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobId: sound.id }),
+    }).catch(() => {})
   }, [isPlaying, sound.audioUrl])
 
   const handleCardClick = () => {
@@ -151,6 +158,12 @@ export default function SoundCard({
             </button>
           )}
           <span>{formatDuration(sound.duration)}</span>
+          {sound.playCount > 0 && (
+            <>
+              <span className="text-text-ghost">·</span>
+              <span>{formatPlayCount(sound.playCount)} plays</span>
+            </>
+          )}
           {showSavedDate && savedDate && (
             <>
               <span className="text-text-ghost">·</span>

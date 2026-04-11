@@ -38,6 +38,12 @@ export default function GalleryPage() {
     return sounds.filter((sound) => sound.category === activeCategory)
   }, [activeCategory, sounds])
 
+  // Trending: top 5 by actual play count (only show if any have plays)
+  const trendingSounds = useMemo(() => {
+    const withPlays = sounds.filter(s => s.playCount > 0)
+    return withPlays.sort((a, b) => b.playCount - a.playCount).slice(0, 5)
+  }, [sounds])
+
   const user = session?.user
     ? {
         name: session.user.name ?? 'User',
@@ -80,6 +86,22 @@ export default function GalleryPage() {
             </button>
           ))}
         </div>
+
+        {/* Trending Section — only if sounds have real play counts */}
+        {trendingSounds.length > 0 && (
+          <section className="mb-10">
+            <h2 className="font-mono text-[10px] text-text-tertiary tracking-wider uppercase mb-3">
+              MOST PLAYED
+            </h2>
+            <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-2 -mx-4 px-4">
+              {trendingSounds.map((sound, index) => (
+                <div key={sound.id} className="min-w-55 flex-shrink-0">
+                  <SoundCard sound={sound} index={index} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Main Grid */}
         <section>
