@@ -30,6 +30,10 @@ function HomePageInner() {
   const [neighbors, setNeighbors] = useState<Neighbor[]>([])
   const [variations, setVariations] = useState<Variation[]>([])
   const [isExiting, setIsExiting] = useState(false)
+  const [tpLatencyMs, setTpLatencyMs] = useState<number | null>(null)
+  const [musicBedUrl, setMusicBedUrl] = useState<string | null>(null)
+  const [musicBedLoading, setMusicBedLoading] = useState(false)
+  const [musicBedError, setMusicBedError] = useState(false)
   const [showSignIn, setShowSignIn] = useState(false)
   const { data: session } = useSession()
   const { toast, showToast, hideToast } = useToast()
@@ -79,6 +83,7 @@ function HomePageInner() {
           case 1:
             setStage(1)
             if (data.neighbors) setNeighbors(data.neighbors)
+            if (data.latencyMs) setTpLatencyMs(data.latencyMs)
             break
           case 2:
             setStage(2)
@@ -116,6 +121,9 @@ function HomePageInner() {
       setIsExiting(false)
       setStage(0)
       setNeighbors([])
+      setTpLatencyMs(null)
+      setMusicBedUrl(null)
+      setMusicBedError(false)
       startGeneration(searchQuery, duration)
     }, 250)
   }, [query, duration, startGeneration])
@@ -129,6 +137,9 @@ function HomePageInner() {
       setStage(0)
       setNeighbors([])
       setVariations([])
+      setTpLatencyMs(null)
+      setMusicBedUrl(null)
+      setMusicBedError(false)
     }, 250)
   }, [])
 
@@ -139,8 +150,30 @@ function HomePageInner() {
 
     setQuery(refinedQuery)
     setVariations([]) // Shows ghost cards inline in Zone C
+    setMusicBedUrl(null)
+    setMusicBedError(false)
     startGeneration(refinedQuery, duration)
   }, [query, duration, startGeneration])
+
+  const generateMusicBed = useCallback(async () => {
+    setMusicBedLoading(true)
+    setMusicBedError(false)
+    try {
+      const res = await fetch('/api/music', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, neighbors }),
+      })
+      if (!res.ok) throw new Error('failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      setMusicBedUrl(url)
+    } catch {
+      setMusicBedError(true)
+    } finally {
+      setMusicBedLoading(false)
+    }
+  }, [query, neighbors])
 
   const handleSignIn = useCallback(() => {
     signIn('google')
@@ -183,6 +216,11 @@ function HomePageInner() {
           neighbors={neighbors}
           onNewSearch={handleNewSearch}
           onRefine={handleRefine}
+          tpLatencyMs={tpLatencyMs}
+          onGenerateMusicBed={generateMusicBed}
+          musicBedUrl={musicBedUrl}
+          musicBedLoading={musicBedLoading}
+          musicBedError={musicBedError}
         />
       )}
 

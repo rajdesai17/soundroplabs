@@ -1,33 +1,18 @@
-import { pipeline, type FeatureExtractionPipeline } from '@huggingface/transformers'
+import { HfInference } from '@huggingface/inference'
 
-const MODEL = 'Xenova/all-MiniLM-L6-v2'
-
-let embedder: FeatureExtractionPipeline | null = null
-let loading: Promise<FeatureExtractionPipeline> | null = null
+const hf = new HfInference(process.env.HF_API_TOKEN)
 
 /**
- * Get or initialize the embedding model. Singleton pattern ensures
- * the model is loaded once per function instance (Fluid Compute reuses instances).
- */
-async function getEmbedder(): Promise<FeatureExtractionPipeline> {
-  if (embedder) return embedder
-  if (loading) return loading
-
-  loading = pipeline('feature-extraction', MODEL, {
-    dtype: 'fp32',
-  }) as Promise<FeatureExtractionPipeline>
-
-  embedder = await loading
-  loading = null
-  return embedder
-}
-
-/**
- * Embed a single query. Uses the same all-MiniLM-L6-v2 model (384 dims)
- * as the pipeline scripts to match the Turbopuffer index.
+ * Embed a single query via HuggingFace Inference API.
+ * Uses the same all-MiniLM-L6-v2 model (384 dims) as the pipeline scripts
+ * to match the Turbopuffer index — but hosted, so no cold-start model download.
  */
 export async function embedQuery(text: string): Promise<number[]> {
-  const emb = await getEmbedder()
-  const result = await emb(text, { pooling: 'mean', normalize: true })
-  return Array.from(result.data as Float32Array)
+  const result = await hf.featureExtraction({
+    model: 'sentence-transformers/all-MiniLM-L6-v2',
+    inputs: text,
+  })
+  // HF returns a nested array for sentence transformers — flatten it
+  const embedding = Array.isArray(result[0]) ? result[0] as number[] : result as number[]
+  return embedding
 }

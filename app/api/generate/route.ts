@@ -17,7 +17,8 @@ function isMockMode(): boolean {
     !process.env.TURBOPUFFER_API_KEY ||
     !process.env.ELEVENLABS_API_KEY ||
     !process.env.AI_GATEWAY_API_KEY ||
-    !process.env.BLOB_READ_WRITE_TOKEN
+    !process.env.BLOB_READ_WRITE_TOKEN ||
+    !process.env.HF_API_TOKEN
   )
 }
 
@@ -107,10 +108,13 @@ export async function GET(request: NextRequest) {
           send({ stage: 0, message: 'Searching 50,000 sounds...' })
 
           const embedding = await embedQuery(query)
+
+          const tpStart = Date.now()
           const neighbors = await queryNeighbors(embedding, 8)
+          const tpLatencyMs = Date.now() - tpStart
 
           // --- Stage 1: Neighbors found ---
-          send({ stage: 1, message: `Found ${neighbors.length} acoustic neighbors...`, neighbors })
+          send({ stage: 1, message: `Found ${neighbors.length} acoustic neighbors...`, neighbors, latencyMs: tpLatencyMs })
 
           // --- Stage 2: Prompt enrichment ---
           send({ stage: 2, message: 'Building generation prompt...' })

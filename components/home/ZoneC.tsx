@@ -13,6 +13,11 @@ interface ZoneCProps {
   neighbors: Neighbor[]
   onNewSearch: () => void
   onRefine: (modifier: string) => void
+  tpLatencyMs?: number | null
+  onGenerateMusicBed?: () => void
+  musicBedUrl?: string | null
+  musicBedLoading?: boolean
+  musicBedError?: boolean
 }
 
 export default function ZoneC({
@@ -21,6 +26,11 @@ export default function ZoneC({
   neighbors,
   onNewSearch,
   onRefine,
+  tpLatencyMs,
+  onGenerateMusicBed,
+  musicBedUrl,
+  musicBedLoading = false,
+  musicBedError = false,
 }: ZoneCProps) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [playingIndex, setPlayingIndex] = useState<number | null>(null)
@@ -122,6 +132,48 @@ export default function ZoneC({
               ))}
             </div>
 
+            {/* Music Bed Section */}
+            <div className="pt-4 border-t border-border-default mb-6">
+              {!musicBedUrl && onGenerateMusicBed && (
+                <button
+                  onClick={onGenerateMusicBed}
+                  disabled={musicBedLoading}
+                  className={`font-sans text-[13px] border border-border-default rounded px-4 py-2 flex items-center gap-2 transition-colors ${
+                    musicBedLoading
+                      ? 'text-text-tertiary cursor-not-allowed'
+                      : 'text-text-primary hover:border-border-hover cursor-pointer'
+                  }`}
+                >
+                  {musicBedLoading
+                    ? 'Generating music bed...'
+                    : '\u266A  Generate music bed'}
+                </button>
+              )}
+
+              {musicBedError && (
+                <p className="font-mono text-xs text-red-500 mt-2">
+                  Generation failed — try again
+                </p>
+              )}
+
+              {musicBedUrl && (
+                <div className="bg-bg-elevated border border-border-default rounded-lg p-3">
+                  <div className="font-mono text-[10px] text-text-tertiary tracking-wider uppercase mb-2">
+                    Music bed — ElevenLabs Music API
+                  </div>
+                  <audio
+                    src={musicBedUrl}
+                    controls
+                    className="w-full h-8"
+                    style={{ accentColor: '#E8F055' }}
+                  />
+                  <div className="font-mono text-[11px] text-text-tertiary mt-1.5">
+                    30s instrumental · play alongside your SFX
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* New Search Link */}
             <button
               onClick={onNewSearch}
@@ -141,6 +193,13 @@ export default function ZoneC({
               8 sounds from our library
             </p>
             <NeighborList neighbors={neighbors} />
+
+            {tpLatencyMs != null && (
+              <div className="font-mono text-[11px] text-text-tertiary mt-3 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-sd-accent inline-block flex-shrink-0" />
+                turbopuffer · found {neighbors.length} neighbors in {tpLatencyMs}ms
+              </div>
+            )}
           </div>
         </div>
       </div>
