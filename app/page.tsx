@@ -12,7 +12,16 @@ export default function LandingPage() {
   const [showSignIn, setShowSignIn] = useState(false)
 
   return (
-    <div className="min-h-screen bg-bg-base">
+    <div
+      className="min-h-screen bg-bg-base relative"
+      style={{
+        backgroundImage: `
+          linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+        `,
+        backgroundSize: '64px 64px',
+      }}
+    >
       <Navigation
         user={session?.user ? {
           name: session.user.name ?? 'User',
@@ -25,24 +34,6 @@ export default function LandingPage() {
       <section className="relative flex flex-col items-center justify-center px-4 pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden">
         {/* Background: grid + glows */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          {/* Grid pattern — checker squares */}
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `
-                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
-              `,
-              backgroundSize: '64px 64px',
-            }}
-          />
-
-          {/* Radial fade — grid fades out from center */}
-          <div
-            className="absolute inset-0"
-            style={{ background: 'radial-gradient(ellipse at center, transparent 30%, #0A0A0A 75%)' }}
-          />
-
           {/* Primary accent glow */}
           <div
             className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px]"
@@ -86,23 +77,28 @@ export default function LandingPage() {
           Single effects or full scene soundscapes — in seconds.
         </p>
 
+        {/* Hero CTAs */}
         <div
           className="relative z-10 flex flex-col sm:flex-row gap-3 animate-fade-in-up"
           style={{ animationDelay: '240ms' }}
         >
           <Link
             href="/sfx"
-            className="group flex items-center justify-center gap-2.5 bg-sd-accent text-bg-base font-sans text-sm font-medium px-7 py-3.5 rounded-lg transition-all hover:bg-sd-accent-dim"
+            className="group flex items-center gap-3 bg-sd-accent text-bg-base font-sans px-7 py-3.5 rounded-lg transition-all hover:bg-sd-accent-dim"
           >
-            Generate SFX
-            <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+            <Zap size={15} />
+            <span className="text-sm font-medium">Generate SFX</span>
+            <span className="text-[11px] opacity-60">4 variations + music bed</span>
+            <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
           </Link>
           <Link
             href="/scene"
-            className="group flex items-center justify-center gap-2.5 border border-border-default text-text-primary font-sans text-sm font-medium px-7 py-3.5 rounded-lg transition-all hover:border-border-hover hover:bg-bg-surface"
+            className="group flex items-center gap-3 border border-border-default text-text-primary font-sans px-7 py-3.5 rounded-lg transition-all hover:border-border-hover hover:bg-bg-surface"
           >
-            Design a Scene
-            <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+            <Layers size={15} />
+            <span className="text-sm font-medium">Design a Scene</span>
+            <span className="text-[11px] text-text-tertiary">4 layers + DAW mixer</span>
+            <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
       </section>
@@ -151,10 +147,9 @@ export default function LandingPage() {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* SFX Card */}
             <Link
               href="/sfx"
-              className="group border border-border-default rounded-xl p-7 transition-all hover:border-sd-accent hover:bg-[#0A0A02]"
+              className="group border border-border-default rounded-xl p-7 transition-all hover:border-sd-accent hover:bg-sd-accent/[0.03]"
             >
               <div className="flex items-center gap-2 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-sd-accent/10 flex items-center justify-center">
@@ -178,10 +173,9 @@ export default function LandingPage() {
               </span>
             </Link>
 
-            {/* Scene Card */}
             <Link
               href="/scene"
-              className="group border border-border-default rounded-xl p-7 transition-all hover:border-[#4A9EFF] hover:bg-[#02050A]"
+              className="group border border-border-default rounded-xl p-7 transition-all hover:border-[#4A9EFF] hover:bg-[#4A9EFF]/[0.03]"
             >
               <div className="flex items-center gap-2 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-[#4A9EFF]/10 flex items-center justify-center">
