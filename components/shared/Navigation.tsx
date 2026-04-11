@@ -36,7 +36,7 @@ export default function Navigation({ user, onSignInClick }: NavigationProps) {
     <nav className="h-14 border-b border-bg-surface flex items-center justify-between px-4 md:px-6 bg-bg-base">
       <Link href="/" className="flex items-center font-mono text-base font-medium text-text-primary">
         <AnimatedWaveform />
-        SoundDrop
+        SoundDropLabs
       </Link>
 
       {/* Desktop Nav */}

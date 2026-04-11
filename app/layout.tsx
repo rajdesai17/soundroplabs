@@ -24,7 +24,7 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'SoundDrop — AI Sound Effect Generator',
+  title: 'SoundDropLabs — AI Sound Design',
   description: 'Describe any sound in natural language and instantly get generated audio variations. Stop hunting stock libraries.',
   generator: 'v0.app',
   icons: {

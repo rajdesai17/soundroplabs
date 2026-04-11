@@ -295,7 +295,7 @@ export default function LandingPage() {
       <footer className="px-4 py-6 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="font-mono text-[10px] text-text-ghost">
-            SoundDrop &middot; AI sound design
+            SoundDropLabs &middot; AI sound design
           </span>
           <div className="flex gap-5">
             {[

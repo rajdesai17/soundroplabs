@@ -1,4 +1,4 @@
-# SoundDrop
+# SoundDropLabs
 
 AI-powered sound design tool. Describe any sound or scene — get production-ready audio in seconds.
 
@@ -10,7 +10,7 @@ Live: [v0-soundroplabs.vercel.app](https://v0-soundroplabs.vercel.app)
 
 ## What it does
 
-SoundDrop generates sound effects and full scene soundscapes using AI, grounded in semantic search over 26,000 real-world sounds.
+SoundDropLabs generates sound effects and full scene soundscapes using AI, grounded in semantic search over 26,000 real-world sounds.
 
 ### Two modes
 

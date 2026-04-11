@@ -64,7 +64,7 @@ export default function GalleryPage() {
           What people are creating
         </h1>
         <p className="font-sans text-sm text-text-secondary">
-          Browse AI-generated sounds from the SoundDrop community
+          Browse AI-generated sounds from the SoundDropLabs community
         </p>
       </section>
 
