@@ -91,20 +91,6 @@ export default function GalleryPage() {
           ))}
         </div>
 
-        {/* Trending Section */}
-        <section className="mb-10">
-          <h2 className="font-mono text-[10px] text-text-tertiary tracking-wider uppercase mb-3">
-            TRENDING THIS WEEK
-          </h2>
-          <div className="flex overflow-x-auto scrollbar-hide gap-2 pb-2 -mx-4 px-4">
-            {trendingSounds.map((sound, index) => (
-              <div key={sound.id} className="min-w-55 flex-shrink-0">
-                <SoundCard sound={sound} index={index} />
-              </div>
-            ))}
-          </div>
-        </section>
-
         {/* Main Grid */}
         <section>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">

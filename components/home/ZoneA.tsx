@@ -73,14 +73,10 @@ export default function ZoneA({
         ))}
       </div>
 
-      {/* Stats Bar */}
-      <div className="flex items-center justify-center gap-4 mt-12 font-mono text-sm text-text-tertiary">
-        <span>24,891 sounds generated</span>
-        <span className="text-text-ghost">·</span>
-        <span>4.2s avg generation</span>
-        <span className="text-text-ghost">·</span>
-        <span>100% royalty-free</span>
-      </div>
+      {/* Footer hint */}
+      <p className="font-mono text-xs text-text-tertiary mt-12">
+        26,000 indexed sounds &middot; ~20ms vector search &middot; royalty-free output
+      </p>
     </div>
   )
 }
