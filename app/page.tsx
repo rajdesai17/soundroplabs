@@ -22,8 +22,47 @@ export default function LandingPage() {
       />
 
       {/* ─── HERO ─── */}
-      <section className="flex flex-col items-center justify-center px-4 pt-28 pb-20 md:pt-36 md:pb-28">
-        <div className="flex flex-col items-center gap-3 mb-8 animate-fade-in-up">
+      <section className="relative flex flex-col items-center justify-center px-4 pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden">
+        {/* Background: grid + glows */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          {/* Grid pattern — checker squares */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+              `,
+              backgroundSize: '64px 64px',
+            }}
+          />
+
+          {/* Radial fade — grid fades out from center */}
+          <div
+            className="absolute inset-0"
+            style={{ background: 'radial-gradient(ellipse at center, transparent 30%, #0A0A0A 75%)' }}
+          />
+
+          {/* Primary accent glow */}
+          <div
+            className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px]"
+            style={{ background: 'radial-gradient(ellipse at center, rgba(232,240,85,0.07) 0%, rgba(232,240,85,0.02) 35%, transparent 65%)' }}
+          />
+
+          {/* Blue glow — top right */}
+          <div
+            className="absolute -top-[10%] right-[5%] w-[500px] h-[500px]"
+            style={{ background: 'radial-gradient(circle, rgba(74,158,255,0.05) 0%, transparent 60%)' }}
+          />
+
+          {/* Purple glow — bottom left */}
+          <div
+            className="absolute bottom-[5%] -left-[5%] w-[450px] h-[450px]"
+            style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 60%)' }}
+          />
+        </div>
+
+        <div className="relative z-10 flex flex-col items-center gap-3 mb-8 animate-fade-in-up">
           <div className="flex items-center gap-4 opacity-50">
             <img src="/lockup_dark.svg" alt="turbopuffer" className="h-5" />
             <span className="font-mono text-xs text-text-tertiary">+</span>
@@ -33,14 +72,14 @@ export default function LandingPage() {
         </div>
 
         <h1
-          className="font-serif text-5xl sm:text-6xl md:text-8xl text-text-primary text-center leading-[0.92] mb-4 animate-fade-in-up"
+          className="relative z-10 font-serif text-5xl sm:text-6xl md:text-8xl text-text-primary text-center leading-[0.92] mb-4 animate-fade-in-up"
           style={{ animationDelay: '80ms' }}
         >
           Generate the sound<br className="hidden sm:block" /> you hear in your head.
         </h1>
 
         <p
-          className="font-sans text-lg md:text-xl text-text-secondary text-center max-w-lg mb-10 leading-relaxed animate-fade-in-up"
+          className="relative z-10 font-sans text-lg md:text-xl text-text-secondary text-center max-w-lg mb-10 leading-relaxed animate-fade-in-up"
           style={{ animationDelay: '160ms' }}
         >
           AI sound design powered by semantic search over 26,000 real sounds.
@@ -48,7 +87,7 @@ export default function LandingPage() {
         </p>
 
         <div
-          className="flex flex-col sm:flex-row gap-3 animate-fade-in-up"
+          className="relative z-10 flex flex-col sm:flex-row gap-3 animate-fade-in-up"
           style={{ animationDelay: '240ms' }}
         >
           <Link
@@ -69,7 +108,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── PIPELINE ─── */}
-      <section className="px-4 py-20 border-t border-border-default">
+      <section className="px-4 py-20 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto">
           <p className="font-mono text-[10px] text-text-tertiary tracking-[0.25em] uppercase mb-3 text-center">
             THE PIPELINE
@@ -102,7 +141,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── TWO MODES ─── */}
-      <section className="px-4 py-20 border-t border-border-default">
+      <section className="px-4 py-20 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto">
           <p className="font-mono text-[10px] text-text-tertiary tracking-[0.25em] uppercase mb-3 text-center">
             TWO MODES
@@ -169,7 +208,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── FEATURES ─── */}
-      <section className="px-4 py-20 border-t border-border-default">
+      <section className="px-4 py-20 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-border-default rounded-xl overflow-hidden">
             {[
@@ -204,7 +243,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── BOTTOM CTA ─── */}
-      <section className="px-4 py-24 border-t border-border-default">
+      <section className="px-4 py-24 border-t border-white/[0.04]">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-serif text-3xl md:text-4xl text-text-primary mb-3">
             Start designing sound.
@@ -230,7 +269,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── POWERED BY ─── */}
-      <section className="px-4 py-16 border-t border-border-default">
+      <section className="px-4 py-16 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto">
           <p className="font-mono text-[10px] text-text-ghost tracking-[0.25em] uppercase text-center mb-8">
             POWERED BY
@@ -259,7 +298,7 @@ export default function LandingPage() {
       </section>
 
       {/* ─── FOOTER ─── */}
-      <footer className="px-4 py-6 border-t border-border-default">
+      <footer className="px-4 py-6 border-t border-white/[0.04]">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="font-mono text-[10px] text-text-ghost">
             SoundDrop &middot; AI sound design
