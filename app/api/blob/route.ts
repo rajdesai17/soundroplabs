@@ -1,22 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getDownloadUrl } from '@vercel/blob'
+import { NextRequest } from 'next/server'
+
+const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN
 
 /**
- * Generates a temporary signed download URL for a private blob.
- * The client calls this with the blob URL to get a playable audio URL.
+ * Proxies audio from private blob storage so the browser can play it.
+ * Fetches with the blob token and returns audio bytes with correct headers.
  */
 export async function GET(request: NextRequest) {
   const blobUrl = request.nextUrl.searchParams.get('url')
 
   if (!blobUrl) {
-    return NextResponse.json({ error: 'url parameter is required' }, { status: 400 })
+    return new Response('url parameter required', { status: 400 })
   }
 
   try {
-    const downloadUrl = await getDownloadUrl(blobUrl)
-    return NextResponse.json({ downloadUrl })
+    // Fetch directly from blob storage with auth token
+    const audioRes = await fetch(blobUrl, {
+      headers: {
+        'Authorization': `Bearer ${BLOB_TOKEN}`,
+      },
+    })
+
+    if (!audioRes.ok) {
+      console.error('Blob fetch failed:', audioRes.status, await audioRes.text())
+      return new Response('Failed to fetch audio', { status: 502 })
+    }
+
+    const audioBuffer = await audioRes.arrayBuffer()
+
+    return new Response(audioBuffer, {
+      headers: {
+        'Content-Type': 'audio/mpeg',
+        'Content-Length': String(audioBuffer.byteLength),
+        'Cache-Control': 'public, max-age=3600',
+        'Accept-Ranges': 'bytes',
+      },
+    })
   } catch (err: any) {
-    console.error('Blob download URL error:', err)
-    return NextResponse.json({ error: 'Failed to generate download URL' }, { status: 500 })
+    console.error('Blob proxy error:', err)
+    return new Response('Failed to proxy audio', { status: 500 })
   }
 }

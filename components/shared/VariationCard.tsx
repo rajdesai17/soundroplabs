@@ -18,11 +18,13 @@ interface VariationCardProps {
   isFavorited?: boolean
 }
 
-async function resolveAudioUrl(audioUrl: string): Promise<string> {
+/**
+ * For private blob URLs, use our proxy endpoint which streams the audio
+ * with correct content-type headers so the browser can play it.
+ */
+function getPlayableUrl(audioUrl: string): string {
   if (audioUrl.includes('.blob.vercel-storage.com')) {
-    const res = await fetch(`/api/blob?url=${encodeURIComponent(audioUrl)}`)
-    const data = await res.json()
-    return data.downloadUrl || audioUrl
+    return `/api/blob?url=${encodeURIComponent(audioUrl)}`
   }
   return audioUrl
 }
@@ -44,18 +46,11 @@ export default function VariationCard({
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const toneRef = useRef<{ stop: () => void } | null>(null)
   const progressRef = useRef<NodeJS.Timeout | null>(null)
-  const resolvedUrlRef = useRef<string | null>(null)
 
   const isMockAudio = variation.audioUrl.startsWith('/mock-audio-')
 
-  // Preload: resolve the blob URL as soon as we get a real audioUrl
-  useEffect(() => {
-    if (!isMockAudio && !resolvedUrlRef.current) {
-      resolveAudioUrl(variation.audioUrl).then(url => {
-        resolvedUrlRef.current = url
-      })
-    }
-  }, [variation.audioUrl, isMockAudio])
+  // Get the playable URL (proxy for private blobs)
+  const playableUrl = isMockAudio ? variation.audioUrl : getPlayableUrl(variation.audioUrl)
 
   // Cleanup on unmount
   useEffect(() => {
@@ -91,17 +86,11 @@ export default function VariationCard({
       return
     }
 
-    // Real audio
-    let url = resolvedUrlRef.current
-    if (!url) {
-      url = await resolveAudioUrl(variation.audioUrl)
-      resolvedUrlRef.current = url
-    }
-
+    // Real audio — use proxy URL that streams with correct content-type
     if (!audioRef.current) {
-      audioRef.current = new Audio(url)
-    } else if (audioRef.current.src !== url) {
-      audioRef.current.src = url
+      audioRef.current = new Audio(playableUrl)
+    } else if (!audioRef.current.src.includes(encodeURIComponent(variation.audioUrl))) {
+      audioRef.current.src = playableUrl
     }
 
     const audio = audioRef.current
