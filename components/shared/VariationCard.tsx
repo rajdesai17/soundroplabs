@@ -18,6 +18,15 @@ interface VariationCardProps {
   isFavorited?: boolean
 }
 
+async function resolveAudioUrl(audioUrl: string): Promise<string> {
+  if (audioUrl.includes('.blob.vercel-storage.com')) {
+    const res = await fetch(`/api/blob?url=${encodeURIComponent(audioUrl)}`)
+    const data = await res.json()
+    return data.downloadUrl || audioUrl
+  }
+  return audioUrl
+}
+
 export default function VariationCard({
   variation,
   isSelected,
@@ -31,13 +40,22 @@ export default function VariationCard({
 }: VariationCardProps) {
   const [progress, setProgress] = useState(0)
   const [isHovering, setIsHovering] = useState(false)
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const toneRef = useRef<{ stop: () => void } | null>(null)
   const progressRef = useRef<NodeJS.Timeout | null>(null)
   const resolvedUrlRef = useRef<string | null>(null)
 
   const isMockAudio = variation.audioUrl.startsWith('/mock-audio-')
-  const isPrivateBlob = variation.audioUrl.includes('.blob.vercel-storage.com')
+
+  // Preload: resolve the blob URL as soon as we get a real audioUrl
+  useEffect(() => {
+    if (!isMockAudio && !resolvedUrlRef.current) {
+      resolveAudioUrl(variation.audioUrl).then(url => {
+        resolvedUrlRef.current = url
+      })
+    }
+  }, [variation.audioUrl, isMockAudio])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -51,15 +69,11 @@ export default function VariationCard({
     }
   }, [])
 
-  // Handle hover-to-play
-  const handleMouseEnter = useCallback(() => {
-    setIsHovering(true)
-    if (isPlaying) return
-
+  const playAudio = useCallback(async () => {
     if (isMockAudio) {
-      // Fallback: play sine tone for mock audio
       const frequency = 220 + (variation.index - 1) * 110
       toneRef.current = playTone(frequency, variation.duration)
+      setIsAudioPlaying(true)
 
       setProgress(0)
       const interval = 50
@@ -68,71 +82,94 @@ export default function VariationCard({
         setProgress(prev => {
           if (prev >= 1) {
             if (progressRef.current) clearInterval(progressRef.current)
+            setIsAudioPlaying(false)
             return 0
           }
           return prev + increment
         })
       }, interval)
-    } else {
-      // Real audio playback — resolve private blob URL if needed
-      const playAudio = async () => {
-        let url = variation.audioUrl
-        if (isPrivateBlob && !resolvedUrlRef.current) {
-          try {
-            const res = await fetch(`/api/blob?url=${encodeURIComponent(url)}`)
-            const data = await res.json()
-            if (data.downloadUrl) {
-              url = data.downloadUrl
-              resolvedUrlRef.current = url
-            }
-          } catch {
-            return // Can't resolve URL, skip playback
-          }
-        } else if (resolvedUrlRef.current) {
-          url = resolvedUrlRef.current
-        }
-
-        if (!audioRef.current || audioRef.current.src !== url) {
-          audioRef.current = new Audio(url)
-        }
-        const audio = audioRef.current
-        audio.currentTime = 0
-
-        audio.ontimeupdate = () => {
-          if (audio.duration) {
-            setProgress(audio.currentTime / audio.duration)
-          }
-        }
-        audio.onended = () => {
-          setProgress(0)
-        }
-
-        audio.play().catch(() => {
-          // Autoplay may be blocked; ignore
-        })
-      }
-      playAudio()
+      return
     }
-  }, [isPlaying, isMockAudio, isPrivateBlob, variation.audioUrl, variation.duration, variation.index])
 
-  const handleMouseLeave = useCallback(() => {
-    setIsHovering(false)
-    if (isPlaying) return
+    // Real audio
+    let url = resolvedUrlRef.current
+    if (!url) {
+      url = await resolveAudioUrl(variation.audioUrl)
+      resolvedUrlRef.current = url
+    }
 
+    if (!audioRef.current) {
+      audioRef.current = new Audio(url)
+    } else if (audioRef.current.src !== url) {
+      audioRef.current.src = url
+    }
+
+    const audio = audioRef.current
+    audio.currentTime = 0
+
+    audio.ontimeupdate = () => {
+      if (audio.duration) {
+        setProgress(audio.currentTime / audio.duration)
+      }
+    }
+    audio.onended = () => {
+      setProgress(0)
+      setIsAudioPlaying(false)
+    }
+    audio.onerror = () => {
+      console.error('Audio playback error for', url)
+      setIsAudioPlaying(false)
+    }
+
+    try {
+      await audio.play()
+      setIsAudioPlaying(true)
+    } catch (err) {
+      console.error('Play failed:', err)
+    }
+  }, [isMockAudio, variation.audioUrl, variation.duration, variation.index])
+
+  const pauseAudio = useCallback(() => {
     if (isMockAudio) {
       toneRef.current?.stop()
       toneRef.current = null
     } else if (audioRef.current) {
       audioRef.current.pause()
-      audioRef.current.currentTime = 0
     }
-
     if (progressRef.current) {
       clearInterval(progressRef.current)
       progressRef.current = null
     }
-    setProgress(0)
-  }, [isPlaying, isMockAudio])
+    setIsAudioPlaying(false)
+  }, [isMockAudio])
+
+  // Play button click — this is user-initiated so browsers allow it
+  const handlePlayClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (isAudioPlaying) {
+      pauseAudio()
+    } else {
+      playAudio()
+    }
+    onTogglePlay()
+  }, [isAudioPlaying, playAudio, pauseAudio, onTogglePlay])
+
+  // Hover-to-play: only works after user has interacted with the page
+  const handleMouseEnter = useCallback(() => {
+    setIsHovering(true)
+    if (!isAudioPlaying) {
+      playAudio()
+    }
+  }, [isAudioPlaying, playAudio])
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovering(false)
+    if (isAudioPlaying && !isPlaying) {
+      pauseAudio()
+      setProgress(0)
+      if (audioRef.current) audioRef.current.currentTime = 0
+    }
+  }, [isAudioPlaying, isPlaying, pauseAudio])
 
   return (
     <div
@@ -169,16 +206,13 @@ export default function VariationCard({
       {/* Controls */}
       <div className="flex items-center gap-2">
         <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onTogglePlay()
-          }}
+          onClick={handlePlayClick}
           className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
-          aria-label={isPlaying ? 'Pause' : 'Play'}
+          aria-label={isAudioPlaying ? 'Pause' : 'Play'}
         >
-          {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+          {isAudioPlaying ? <Pause size={16} /> : <Play size={16} />}
         </button>
-        
+
         <button
           onClick={(e) => {
             e.stopPropagation()
@@ -189,7 +223,7 @@ export default function VariationCard({
         >
           <Download size={16} />
         </button>
-        
+
         <button
           onClick={(e) => {
             e.stopPropagation()
@@ -202,7 +236,7 @@ export default function VariationCard({
         >
           <Heart size={16} fill={isFavorited ? 'currentColor' : 'none'} />
         </button>
-        
+
         <button
           onClick={(e) => {
             e.stopPropagation()
@@ -231,7 +265,7 @@ export default function VariationCard({
 // Ghost/loading version of the card
 export function VariationCardGhost({ index }: { index: number }) {
   return (
-    <div 
+    <div
       className="bg-bg-surface border border-bg-elevated rounded-lg h-36 animate-shimmer"
       style={{ animationDelay: `${index * 200}ms` }}
     />
