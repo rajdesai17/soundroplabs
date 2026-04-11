@@ -53,28 +53,29 @@ export default function LandingPage() {
           />
         </div>
 
-        <div className="relative z-10 flex flex-col items-center gap-3 mb-8 animate-fade-in-up">
-          <div className="flex items-center gap-4 opacity-50">
-            <img src="/lockup_dark.svg" alt="turbopuffer" className="h-5" />
-            <span className="font-mono text-xs text-text-tertiary">+</span>
-            <img src="/elevenlabs-logo.svg" alt="ElevenLabs" className="h-3 invert" />
-          </div>
-          <span className="font-mono text-[11px] text-sd-accent tracking-wide">#ElevenHacks</span>
-        </div>
+        <p className="relative z-10 font-mono text-[11px] text-text-tertiary tracking-wide mb-8 animate-fade-in-up flex items-center gap-2 flex-wrap justify-center">
+          <span>Built for</span>
+          <span className="text-sd-accent">#ElevenHacks</span>
+          <span>&middot;</span>
+          <span>Powered by</span>
+          <img src="/lockup_dark.svg" alt="turbopuffer" className="h-4 inline opacity-60" />
+          <span>+</span>
+          <img src="/elevenlabs-logo.svg" alt="ElevenLabs" className="h-2.5 inline invert opacity-60" />
+        </p>
 
         <h1
           className="relative z-10 font-serif text-5xl sm:text-6xl md:text-8xl text-text-primary text-center leading-[0.92] mb-4 animate-fade-in-up"
           style={{ animationDelay: '80ms' }}
         >
-          Generate the sound<br className="hidden sm:block" /> you hear in your head.
+          Your scene deserves<br className="hidden sm:block" /> a soundtrack.
         </h1>
 
         <p
-          className="relative z-10 font-sans text-lg md:text-xl text-text-secondary text-center max-w-lg mb-10 leading-relaxed animate-fade-in-up"
+          className="relative z-10 font-sans text-lg md:text-xl text-text-secondary text-center max-w-xl mb-10 leading-relaxed animate-fade-in-up"
           style={{ animationDelay: '160ms' }}
         >
-          AI sound design powered by semantic search over 26,000 real sounds.
-          Single effects or full scene soundscapes — in seconds.
+          Describe a sound or a full scene — SoundDropLabs searches 26,000 real
+          recordings, enriches your prompt, and generates production-ready audio in seconds.
         </p>
 
         {/* Hero CTAs */}
@@ -84,23 +85,27 @@ export default function LandingPage() {
         >
           <Link
             href="/sfx"
-            className="group flex items-center gap-3 bg-sd-accent text-bg-base font-sans px-7 py-3.5 rounded-lg transition-all hover:bg-sd-accent-dim"
+            className="group flex items-center justify-center gap-2.5 bg-sd-accent text-bg-base font-sans text-sm font-medium px-7 py-3.5 rounded-lg transition-all hover:bg-sd-accent-dim"
           >
-            <Zap size={15} />
-            <span className="text-sm font-medium">Generate SFX</span>
-            <span className="text-[11px] opacity-60">4 variations + music bed</span>
-            <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+            Generate a Sound Effect
+            <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
           </Link>
           <Link
             href="/scene"
-            className="group flex items-center gap-3 border border-border-default text-text-primary font-sans px-7 py-3.5 rounded-lg transition-all hover:border-border-hover hover:bg-bg-surface"
+            className="group flex items-center justify-center gap-2.5 border border-border-default text-text-primary font-sans text-sm font-medium px-7 py-3.5 rounded-lg transition-all hover:border-border-hover hover:bg-bg-surface"
           >
-            <Layers size={15} />
-            <span className="text-sm font-medium">Design a Scene</span>
-            <span className="text-[11px] text-text-tertiary">4 layers + DAW mixer</span>
-            <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
+            Design a Full Scene
+            <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
+
+        {/* Micro-copy */}
+        <p
+          className="relative z-10 font-mono text-xs text-text-tertiary mt-5 animate-fade-in-up"
+          style={{ animationDelay: '320ms' }}
+        >
+          No uploads. No libraries. Just describe it.
+        </p>
       </section>
 
       {/* ─── PIPELINE ─── */}
@@ -240,23 +245,23 @@ export default function LandingPage() {
       <section className="px-4 py-24 border-t border-white/[0.04]">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-serif text-3xl md:text-4xl text-text-primary mb-3">
-            Start designing sound.
+            Your sound starts here.
           </h2>
           <p className="font-sans text-sm text-text-tertiary mb-8">
-            No account required. Royalty-free output.
+            No account required. No uploads. Royalty-free output.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link
               href="/sfx"
               className="group flex items-center justify-center gap-2 bg-sd-accent text-bg-base font-sans text-sm font-medium px-7 py-3.5 rounded-lg transition-all hover:bg-sd-accent-dim"
             >
-              Generate SFX <ArrowRight size={15} />
+              Generate a Sound Effect <ArrowRight size={15} />
             </Link>
             <Link
               href="/scene"
               className="group flex items-center justify-center gap-2 border border-border-default text-text-primary font-sans text-sm font-medium px-7 py-3.5 rounded-lg transition-all hover:border-border-hover hover:bg-bg-surface"
             >
-              Design a Scene <ArrowRight size={15} />
+              Design a Full Scene <ArrowRight size={15} />
             </Link>
           </div>
         </div>
