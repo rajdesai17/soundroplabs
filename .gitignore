@@ -13,6 +13,14 @@ next.user-config.*
 # Pipeline data (large JSON artifacts)
 scripts/data/
 
+# Skills / agents
+.agents/
+.claude/skills/
+.continue/
+.kiro/
+.windsurf/
+skills-lock.json
+
 # Common ignores
 node_modules
 .next/
