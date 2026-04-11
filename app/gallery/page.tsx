@@ -5,15 +5,15 @@ import { useSession, signIn } from 'next-auth/react'
 import Navigation from '@/components/shared/Navigation'
 import SoundCard from '@/components/shared/SoundCard'
 import SignInModal from '@/components/shared/SignInModal'
-import { mockGalleryData, categories } from '@/lib/mockData'
+import { categories } from '@/lib/mockData'
 import { Category, SoundEntry } from '@/lib/types'
 
 export default function GalleryPage() {
   const { data: session } = useSession()
   const [activeCategory, setActiveCategory] = useState<Category>('All')
   const [showSignIn, setShowSignIn] = useState(false)
-  const [sounds, setSounds] = useState<SoundEntry[]>(mockGalleryData)
-  const [loading, setLoading] = useState(false)
+  const [sounds, setSounds] = useState<SoundEntry[]>([])
+  const [loading, setLoading] = useState(true)
 
   // Fetch from API when category changes
   useEffect(() => {
@@ -24,13 +24,10 @@ export default function GalleryPage() {
     fetch(`/api/gallery?${params}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.sounds && data.sounds.length > 0) {
-          setSounds(data.sounds)
-        }
-        // If API returns empty (no DB), keep mock data
+        setSounds(data.sounds ?? [])
       })
       .catch(() => {
-        // Silently fall back to mock data already in state
+        setSounds([])
       })
       .finally(() => setLoading(false))
   }, [activeCategory])
@@ -40,13 +37,6 @@ export default function GalleryPage() {
     if (activeCategory === 'All') return sounds
     return sounds.filter((sound) => sound.category === activeCategory)
   }, [activeCategory, sounds])
-
-  // Get trending sounds (top 5 by play count)
-  const trendingSounds = useMemo(() => {
-    return [...sounds]
-      .sort((a, b) => b.playCount - a.playCount)
-      .slice(0, 5)
-  }, [sounds])
 
   const user = session?.user
     ? {
@@ -93,19 +83,29 @@ export default function GalleryPage() {
 
         {/* Main Grid */}
         <section>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {filteredSounds.map((sound, index) => (
-              <SoundCard key={sound.id} sound={sound} index={index} />
-            ))}
-          </div>
-
-          {filteredSounds.length === 0 && !loading && (
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {Array.from({ length: 8 }, (_, i) => (
+                <div
+                  key={i}
+                  className="bg-bg-surface border border-border-default rounded-lg h-48 animate-shimmer"
+                  style={{ animationDelay: `${i * 100}ms` }}
+                />
+              ))}
+            </div>
+          ) : filteredSounds.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {filteredSounds.map((sound, index) => (
+                <SoundCard key={sound.id} sound={sound} index={index} />
+              ))}
+            </div>
+          ) : (
             <div className="text-center py-16">
               <p className="font-serif text-2xl text-text-primary mb-2">
-                No sounds found
+                No sounds yet
               </p>
               <p className="font-sans text-text-secondary">
-                Try selecting a different category
+                Generate your first sound to see it here
               </p>
             </div>
           )}
