@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Play, Pause, Download, Heart, RefreshCw } from 'lucide-react'
 import WaveformThumbnail from './WaveformThumbnail'
-import { formatDuration, playTone } from '@/lib/waveformUtils'
+import { formatDuration } from '@/lib/waveformUtils'
 import { Variation } from '@/lib/types'
 
 interface VariationCardProps {
@@ -18,10 +18,6 @@ interface VariationCardProps {
   isFavorited?: boolean
 }
 
-/**
- * For private blob URLs, use our proxy endpoint which streams the audio
- * with correct content-type headers so the browser can play it.
- */
 function getPlayableUrl(audioUrl: string): string {
   if (audioUrl.includes('.blob.vercel-storage.com')) {
     return `/api/blob?url=${encodeURIComponent(audioUrl)}`
@@ -42,20 +38,24 @@ export default function VariationCard({
 }: VariationCardProps) {
   const [progress, setProgress] = useState(0)
   const [isHovering, setIsHovering] = useState(false)
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-  const toneRef = useRef<{ stop: () => void } | null>(null)
   const progressRef = useRef<NodeJS.Timeout | null>(null)
 
   const isMockAudio = variation.audioUrl.startsWith('/mock-audio-')
-
-  // Get the playable URL (proxy for private blobs)
   const playableUrl = isMockAudio ? variation.audioUrl : getPlayableUrl(variation.audioUrl)
+
+  // Stop playback when parent says we're no longer the playing card
+  useEffect(() => {
+    if (!isPlaying && audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
+      setProgress(0)
+    }
+  }, [isPlaying])
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      toneRef.current?.stop()
       if (audioRef.current) {
         audioRef.current.pause()
         audioRef.current = null
@@ -64,32 +64,28 @@ export default function VariationCard({
     }
   }, [])
 
-  const playAudio = useCallback(async () => {
-    if (isMockAudio) {
-      const frequency = 220 + (variation.index - 1) * 110
-      toneRef.current = playTone(frequency, variation.duration)
-      setIsAudioPlaying(true)
+  // Play button click — user-initiated, always allowed by browser
+  const handlePlayClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
 
-      setProgress(0)
-      const interval = 50
-      const increment = interval / (variation.duration * 1000)
-      progressRef.current = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 1) {
-            if (progressRef.current) clearInterval(progressRef.current)
-            setIsAudioPlaying(false)
-            return 0
-          }
-          return prev + increment
-        })
-      }, interval)
+    if (isPlaying) {
+      // Pause
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+      onTogglePlay()
       return
     }
 
-    // Real audio — use proxy URL that streams with correct content-type
+    // This calls onTogglePlay which tells the parent to set this as playing
+    // and stop any other playing card
+    onTogglePlay()
+
+    if (isMockAudio) return
+
     if (!audioRef.current) {
       audioRef.current = new Audio(playableUrl)
-    } else if (!audioRef.current.src.includes(encodeURIComponent(variation.audioUrl))) {
+    } else if (!audioRef.current.src.endsWith(playableUrl)) {
       audioRef.current.src = playableUrl
     }
 
@@ -103,68 +99,23 @@ export default function VariationCard({
     }
     audio.onended = () => {
       setProgress(0)
-      setIsAudioPlaying(false)
+      onTogglePlay() // Tell parent we stopped
     }
     audio.onerror = () => {
-      console.error('Audio playback error for', url)
-      setIsAudioPlaying(false)
-    }
-
-    try {
-      await audio.play()
-      setIsAudioPlaying(true)
-    } catch (err) {
-      console.error('Play failed:', err)
-    }
-  }, [isMockAudio, variation.audioUrl, variation.duration, variation.index])
-
-  const pauseAudio = useCallback(() => {
-    if (isMockAudio) {
-      toneRef.current?.stop()
-      toneRef.current = null
-    } else if (audioRef.current) {
-      audioRef.current.pause()
-    }
-    if (progressRef.current) {
-      clearInterval(progressRef.current)
-      progressRef.current = null
-    }
-    setIsAudioPlaying(false)
-  }, [isMockAudio])
-
-  // Play button click — this is user-initiated so browsers allow it
-  const handlePlayClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (isAudioPlaying) {
-      pauseAudio()
-    } else {
-      playAudio()
-    }
-    onTogglePlay()
-  }, [isAudioPlaying, playAudio, pauseAudio, onTogglePlay])
-
-  // Hover-to-play: only works after user has interacted with the page
-  const handleMouseEnter = useCallback(() => {
-    setIsHovering(true)
-    if (!isAudioPlaying) {
-      playAudio()
-    }
-  }, [isAudioPlaying, playAudio])
-
-  const handleMouseLeave = useCallback(() => {
-    setIsHovering(false)
-    if (isAudioPlaying && !isPlaying) {
-      pauseAudio()
+      console.error('Audio playback error')
       setProgress(0)
-      if (audioRef.current) audioRef.current.currentTime = 0
     }
-  }, [isAudioPlaying, isPlaying, pauseAudio])
+
+    audio.play().catch(err => {
+      console.error('Play failed:', err)
+    })
+  }, [isPlaying, isMockAudio, playableUrl, onTogglePlay])
 
   return (
     <div
       onClick={onSelect}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
       className={`relative bg-bg-surface border rounded-lg p-3 cursor-pointer transition-colors duration-100 ${
         isSelected
           ? 'border-border-accent bg-[#0F0F05]'
@@ -197,9 +148,9 @@ export default function VariationCard({
         <button
           onClick={handlePlayClick}
           className="w-8 h-8 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
-          aria-label={isAudioPlaying ? 'Pause' : 'Play'}
+          aria-label={isPlaying ? 'Pause' : 'Play'}
         >
-          {isAudioPlaying ? <Pause size={16} /> : <Play size={16} />}
+          {isPlaying ? <Pause size={16} /> : <Play size={16} />}
         </button>
 
         <button
