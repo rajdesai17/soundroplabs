@@ -72,12 +72,24 @@ export default function ZoneC({
   }, [])
 
   const handleDownload = useCallback((index: number) => {
-    // Mock download - would trigger actual download in production
     const variation = variations[index]
-    console.log(`Downloading variation ${variation.index}`)
+    if (!variation?.audioUrl) return
+    const url = variation.audioUrl.includes('.blob.vercel-storage.com')
+      ? `/api/blob?url=${encodeURIComponent(variation.audioUrl)}`
+      : variation.audioUrl
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `sounddrop-variation-${variation.index}.mp3`
+    a.click()
   }, [variations])
 
-  const toggleFavorite = useCallback((index: number) => {
+  const toggleFavorite = useCallback(async (index: number) => {
+    const variation = variations[index]
+    if (!variation) return
+
+    const isFav = favorites.has(index)
+
+    // Optimistic UI update
     setFavorites((prev) => {
       const next = new Set(prev)
       if (next.has(index)) {
@@ -87,7 +99,35 @@ export default function ZoneC({
       }
       return next
     })
-  }, [])
+
+    try {
+      if (isFav) {
+        // Unfavorite — skip for now, would need library entry ID
+        return
+      }
+      // Save to library
+      await fetch('/api/library', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: variation.id,
+          variationId: variation.id,
+          query,
+          audioUrl: variation.audioUrl,
+          duration: variation.duration,
+          waveformData: variation.waveformData,
+        }),
+      })
+    } catch {
+      // Revert on failure
+      setFavorites((prev) => {
+        const next = new Set(prev)
+        if (isFav) next.add(index)
+        else next.delete(index)
+        return next
+      })
+    }
+  }, [variations, favorites, query])
 
   const handleRegenerate = useCallback((index: number) => {
     console.log(`Regenerating variation ${index + 1}`)
