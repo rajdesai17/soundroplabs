@@ -1,17 +1,25 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { Suspense, useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useSession, signIn } from 'next-auth/react'
 import Navigation from '@/components/shared/Navigation'
 import SignInModal from '@/components/shared/SignInModal'
 import Toast, { useToast } from '@/components/shared/Toast'
 import ZoneA from '@/components/home/ZoneA'
 import ZoneB from '@/components/home/ZoneB'
 import ZoneC from '@/components/home/ZoneC'
-import { Zone, Variation, Neighbor, User } from '@/lib/types'
-import { mockNeighbors, generateMockVariations } from '@/lib/mockData'
+import { Zone, Variation, Neighbor } from '@/lib/types'
 
 export default function HomePage() {
+  return (
+    <Suspense>
+      <HomePageInner />
+    </Suspense>
+  )
+}
+
+function HomePageInner() {
   const searchParams = useSearchParams()
   
   // State
@@ -23,18 +31,79 @@ export default function HomePage() {
   const [variations, setVariations] = useState<Variation[]>([])
   const [isExiting, setIsExiting] = useState(false)
   const [showSignIn, setShowSignIn] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
+  const { data: session } = useSession()
   const { toast, showToast, hideToast } = useToast()
+  const eventSourceRef = useRef<EventSource | null>(null)
+
+  // Clean up EventSource on unmount
+  useEffect(() => {
+    return () => {
+      eventSourceRef.current?.close()
+    }
+  }, [])
 
   // Handle query param for pre-filling search
   useEffect(() => {
     const q = searchParams.get('q')
     if (q) {
       setQuery(q)
-      // Auto-submit if coming from gallery
       handleSubmit(q)
     }
   }, [searchParams])
+
+  const startGeneration = useCallback((searchQuery: string, currentDuration: number | null) => {
+    // Close any existing stream
+    eventSourceRef.current?.close()
+
+    const params = new URLSearchParams({ query: searchQuery })
+    if (currentDuration != null) params.set('duration', String(currentDuration))
+
+    const es = new EventSource(`/api/generate?${params}`)
+    eventSourceRef.current = es
+
+    es.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+
+        if (data.error) {
+          showToast(data.message || 'Generation failed', 'error')
+          setZone('A')
+          es.close()
+          return
+        }
+
+        switch (data.stage) {
+          case 0:
+            setStage(0)
+            break
+          case 1:
+            setStage(1)
+            if (data.neighbors) setNeighbors(data.neighbors)
+            break
+          case 2:
+            setStage(2)
+            break
+          case 3:
+            setStage(3)
+            break
+          case 4:
+            if (data.variations) setVariations(data.variations)
+            setZone('C')
+            es.close()
+            break
+        }
+      } catch {
+        // Ignore parse errors on individual messages
+      }
+    }
+
+    es.onerror = () => {
+      es.close()
+      showToast('Connection lost. Please try again.', 'error')
+      setZone('A')
+      setIsExiting(false)
+    }
+  }, [showToast])
 
   const handleSubmit = useCallback(async (overrideQuery?: string) => {
     const searchQuery = overrideQuery || query
@@ -46,21 +115,10 @@ export default function HomePage() {
       setZone('B')
       setIsExiting(false)
       setStage(0)
-      setNeighbors(mockNeighbors)
+      setNeighbors([])
+      startGeneration(searchQuery, duration)
     }, 250)
-
-    // Simulate API call stages
-    // Stage 0: Searching (already set)
-    setTimeout(() => setStage(1), 1200) // Found neighbors
-    setTimeout(() => setStage(2), 2400) // Building prompt
-    setTimeout(() => setStage(3), 3600) // Generating
-
-    // Complete after ~4s
-    setTimeout(() => {
-      setVariations(generateMockVariations())
-      setZone('C')
-    }, 4500)
-  }, [query])
+  }, [query, duration, startGeneration])
 
   const handleNewSearch = useCallback(() => {
     setIsExiting(true)
@@ -75,36 +133,27 @@ export default function HomePage() {
   }, [])
 
   const handleRefine = useCallback((modifier: string) => {
-    const refinedQuery = modifier === 'Try again' 
-      ? query 
+    const refinedQuery = modifier === 'Try again'
+      ? query
       : `${query} (${modifier.toLowerCase()})`
-    
+
     setQuery(refinedQuery)
-    
-    // Show loading state briefly
-    setVariations([])
-    setTimeout(() => {
-      setVariations(generateMockVariations())
-    }, 1500)
-  }, [query])
+    setVariations([]) // Shows ghost cards inline in Zone C
+    startGeneration(refinedQuery, duration)
+  }, [query, duration, startGeneration])
 
   const handleSignIn = useCallback(() => {
-    // Mock sign in
-    setUser({
-      id: '1',
-      email: 'user@example.com',
-      name: 'Demo User',
-      initials: 'DU',
-    })
-    setShowSignIn(false)
-    showToast('Signed in successfully', 'success')
-  }, [showToast])
+    signIn('google')
+  }, [])
 
   return (
     <div className="min-h-screen bg-bg-base">
-      <Navigation 
-        user={user} 
-        onSignInClick={() => setShowSignIn(true)} 
+      <Navigation
+        user={session?.user ? {
+          name: session.user.name ?? 'User',
+          initials: (session.user.name ?? 'U').slice(0, 2).toUpperCase(),
+        } : null}
+        onSignInClick={() => setShowSignIn(true)}
       />
 
       {zone === 'A' && (

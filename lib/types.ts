@@ -33,6 +33,8 @@ export interface Neighbor {
   title: string
   score: number // 0-100
   description: string
+  freesoundId?: number
+  tags?: string[]
 }
 
 export interface GenerationResult {

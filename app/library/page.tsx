@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession, signIn } from 'next-auth/react'
 import { Search, Plus } from 'lucide-react'
 import Navigation from '@/components/shared/Navigation'
 import SoundCard from '@/components/shared/SoundCard'
 import SignInModal from '@/components/shared/SignInModal'
 import Toast, { useToast } from '@/components/shared/Toast'
-import { SoundEntry, User, LibrarySoundEntry } from '@/lib/types'
+import { SoundEntry, LibrarySoundEntry } from '@/lib/types'
 
 // Empty state waveform SVG
 function EmptyStateWaveform() {
@@ -28,25 +29,47 @@ function EmptyStateWaveform() {
 
 export default function LibraryPage() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [showSignIn, setShowSignIn] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
   const [savedSounds, setSavedSounds] = useState<LibrarySoundEntry[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'newest' | 'most-played' | 'shortest' | 'longest'>('newest')
   const { toast, showToast, hideToast } = useToast()
 
+  const isAuthenticated = !!session?.user
+
+  // Fetch library when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    fetch('/api/library')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.sounds) {
+          setSavedSounds(
+            data.sounds.map((s: any) => ({
+              ...s,
+              createdAt: new Date(s.createdAt),
+              savedAt: new Date(s.savedAt),
+            }))
+          )
+        }
+      })
+      .catch(() => {
+        // Silently fail — empty library is fine
+      })
+  }, [isAuthenticated])
+
   // Filter and sort sounds
   const filteredSounds = useMemo(() => {
     let result = [...savedSounds]
 
-    // Filter by search
     if (searchQuery) {
       result = result.filter((sound) =>
         sound.query.toLowerCase().includes(searchQuery.toLowerCase())
       )
     }
 
-    // Sort
     switch (sortBy) {
       case 'newest':
         result.sort((a, b) => b.savedAt.getTime() - a.savedAt.getTime())
@@ -65,18 +88,9 @@ export default function LibraryPage() {
     return result
   }, [savedSounds, searchQuery, sortBy])
 
-  const handleSignIn = () => {
-    setUser({
-      id: '1',
-      email: 'user@example.com',
-      name: 'Demo User',
-      initials: 'DU',
-    })
-    setShowSignIn(false)
-    showToast('Signed in successfully', 'success')
-  }
-
   const handleDelete = (id: string) => {
+    fetch(`/api/library?id=${id}`, { method: 'DELETE' })
+      .catch(() => {}) // Best-effort
     setSavedSounds((prev) => prev.filter((s) => s.id !== id))
     showToast('Sound removed from library', 'success')
   }
@@ -85,8 +99,15 @@ export default function LibraryPage() {
     router.push('/')
   }
 
+  const user = session?.user
+    ? {
+        name: session.user.name ?? 'User',
+        initials: (session.user.name ?? 'U').slice(0, 2).toUpperCase(),
+      }
+    : null
+
   // Not authenticated state
-  if (!user) {
+  if (!isAuthenticated && status !== 'loading') {
     return (
       <div className="min-h-screen bg-bg-base">
         <Navigation user={null} onSignInClick={() => setShowSignIn(true)} />
@@ -100,7 +121,7 @@ export default function LibraryPage() {
               Sign in to build your personal sound archive.
             </p>
             <button
-              onClick={() => setShowSignIn(true)}
+              onClick={() => signIn('google')}
               className="w-full h-11 bg-text-primary text-bg-base font-sans text-sm font-medium rounded flex items-center justify-center gap-2 hover:bg-text-secondary transition-colors duration-150"
             >
               <GoogleIcon />
@@ -112,7 +133,7 @@ export default function LibraryPage() {
         <SignInModal
           isOpen={showSignIn}
           onClose={() => setShowSignIn(false)}
-          onSignIn={handleSignIn}
+          onSignIn={() => signIn('google')}
         />
       </div>
     )
@@ -127,7 +148,6 @@ export default function LibraryPage() {
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
           <div className="flex items-center gap-4">
-            {/* Search Input */}
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
               <input
@@ -138,8 +158,6 @@ export default function LibraryPage() {
                 className="w-75 h-10 bg-bg-surface border border-border-default rounded pl-9 pr-3 font-sans text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-border-accent"
               />
             </div>
-
-            {/* Sort Select */}
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
@@ -151,8 +169,6 @@ export default function LibraryPage() {
               <option value="longest">Longest</option>
             </select>
           </div>
-
-          {/* New Sound Button */}
           <button
             onClick={handleNewSound}
             className="h-10 px-4 bg-sd-accent text-bg-base font-sans text-sm font-medium rounded flex items-center gap-2 hover:bg-accent-dim transition-colors"
@@ -164,7 +180,6 @@ export default function LibraryPage() {
 
         {/* Content */}
         {savedSounds.length === 0 ? (
-          // Empty State
           <div className="flex flex-col items-center justify-center py-24">
             <EmptyStateWaveform />
             <h2 className="font-serif text-3xl text-text-primary mb-2">
@@ -181,7 +196,6 @@ export default function LibraryPage() {
             </button>
           </div>
         ) : (
-          // Sound Grid
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {filteredSounds.map((sound, index) => (
               <SoundCard
@@ -197,12 +211,6 @@ export default function LibraryPage() {
           </div>
         )}
       </main>
-
-      <SignInModal
-        isOpen={showSignIn}
-        onClose={() => setShowSignIn(false)}
-        onSignIn={handleSignIn}
-      />
 
       {toast && (
         <Toast

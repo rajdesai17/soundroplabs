@@ -1,0 +1,3 @@
+scripts/data/
+.env*.local
+.env.vercel.local

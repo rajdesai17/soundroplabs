@@ -1,39 +1,59 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSession, signIn } from 'next-auth/react'
 import Navigation from '@/components/shared/Navigation'
 import SoundCard from '@/components/shared/SoundCard'
 import SignInModal from '@/components/shared/SignInModal'
 import { mockGalleryData, categories } from '@/lib/mockData'
-import { Category, User } from '@/lib/types'
+import { Category, SoundEntry } from '@/lib/types'
 
 export default function GalleryPage() {
+  const { data: session } = useSession()
   const [activeCategory, setActiveCategory] = useState<Category>('All')
   const [showSignIn, setShowSignIn] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
+  const [sounds, setSounds] = useState<SoundEntry[]>(mockGalleryData)
+  const [loading, setLoading] = useState(false)
 
-  // Filter sounds by category
-  const filteredSounds = useMemo(() => {
-    if (activeCategory === 'All') return mockGalleryData
-    return mockGalleryData.filter((sound) => sound.category === activeCategory)
+  // Fetch from API when category changes
+  useEffect(() => {
+    setLoading(true)
+    const params = new URLSearchParams()
+    if (activeCategory !== 'All') params.set('category', activeCategory)
+
+    fetch(`/api/gallery?${params}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.sounds && data.sounds.length > 0) {
+          setSounds(data.sounds)
+        }
+        // If API returns empty (no DB), keep mock data
+      })
+      .catch(() => {
+        // Silently fall back to mock data already in state
+      })
+      .finally(() => setLoading(false))
   }, [activeCategory])
+
+  // Filter sounds client-side as well for immediate feedback
+  const filteredSounds = useMemo(() => {
+    if (activeCategory === 'All') return sounds
+    return sounds.filter((sound) => sound.category === activeCategory)
+  }, [activeCategory, sounds])
 
   // Get trending sounds (top 5 by play count)
   const trendingSounds = useMemo(() => {
-    return [...mockGalleryData]
+    return [...sounds]
       .sort((a, b) => b.playCount - a.playCount)
       .slice(0, 5)
-  }, [])
+  }, [sounds])
 
-  const handleSignIn = () => {
-    setUser({
-      id: '1',
-      email: 'user@example.com',
-      name: 'Demo User',
-      initials: 'DU',
-    })
-    setShowSignIn(false)
-  }
+  const user = session?.user
+    ? {
+        name: session.user.name ?? 'User',
+        initials: (session.user.name ?? 'U').slice(0, 2).toUpperCase(),
+      }
+    : null
 
   return (
     <div className="min-h-screen bg-bg-base">
@@ -92,7 +112,7 @@ export default function GalleryPage() {
             ))}
           </div>
 
-          {filteredSounds.length === 0 && (
+          {filteredSounds.length === 0 && !loading && (
             <div className="text-center py-16">
               <p className="font-serif text-2xl text-text-primary mb-2">
                 No sounds found
@@ -108,7 +128,7 @@ export default function GalleryPage() {
       <SignInModal
         isOpen={showSignIn}
         onClose={() => setShowSignIn(false)}
-        onSignIn={handleSignIn}
+        onSignIn={() => signIn('google')}
       />
     </div>
   )

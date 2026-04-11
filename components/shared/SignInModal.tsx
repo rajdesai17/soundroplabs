@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect } from 'react'
+import { signIn } from 'next-auth/react'
 
 interface SignInModalProps {
   isOpen: boolean
   onClose: () => void
-  onSignIn: () => void
+  onSignIn?: () => void
 }
 
 export default function SignInModal({ isOpen, onClose, onSignIn }: SignInModalProps) {
@@ -44,7 +45,7 @@ export default function SignInModal({ isOpen, onClose, onSignIn }: SignInModalPr
         </p>
         
         <button
-          onClick={onSignIn}
+          onClick={() => { onSignIn?.(); signIn('google') }}
           className="w-full h-11 bg-text-primary text-bg-base font-sans text-sm font-medium rounded flex items-center justify-center gap-2 hover:bg-text-secondary transition-colors duration-150"
         >
           <GoogleIcon />

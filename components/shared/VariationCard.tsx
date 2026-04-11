@@ -31,13 +31,22 @@ export default function VariationCard({
 }: VariationCardProps) {
   const [progress, setProgress] = useState(0)
   const [isHovering, setIsHovering] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   const toneRef = useRef<{ stop: () => void } | null>(null)
   const progressRef = useRef<NodeJS.Timeout | null>(null)
+  const resolvedUrlRef = useRef<string | null>(null)
+
+  const isMockAudio = variation.audioUrl.startsWith('/mock-audio-')
+  const isPrivateBlob = variation.audioUrl.includes('.blob.vercel-storage.com')
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       toneRef.current?.stop()
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
       if (progressRef.current) clearInterval(progressRef.current)
     }
   }, [])
@@ -45,14 +54,15 @@ export default function VariationCard({
   // Handle hover-to-play
   const handleMouseEnter = useCallback(() => {
     setIsHovering(true)
-    if (!isPlaying) {
-      // Play demo tone on hover
+    if (isPlaying) return
+
+    if (isMockAudio) {
+      // Fallback: play sine tone for mock audio
       const frequency = 220 + (variation.index - 1) * 110
       toneRef.current = playTone(frequency, variation.duration)
-      
-      // Simulate progress
+
       setProgress(0)
-      const interval = 50 // Update every 50ms
+      const interval = 50
       const increment = interval / (variation.duration * 1000)
       progressRef.current = setInterval(() => {
         setProgress(prev => {
@@ -63,21 +73,66 @@ export default function VariationCard({
           return prev + increment
         })
       }, interval)
+    } else {
+      // Real audio playback — resolve private blob URL if needed
+      const playAudio = async () => {
+        let url = variation.audioUrl
+        if (isPrivateBlob && !resolvedUrlRef.current) {
+          try {
+            const res = await fetch(`/api/blob?url=${encodeURIComponent(url)}`)
+            const data = await res.json()
+            if (data.downloadUrl) {
+              url = data.downloadUrl
+              resolvedUrlRef.current = url
+            }
+          } catch {
+            return // Can't resolve URL, skip playback
+          }
+        } else if (resolvedUrlRef.current) {
+          url = resolvedUrlRef.current
+        }
+
+        if (!audioRef.current || audioRef.current.src !== url) {
+          audioRef.current = new Audio(url)
+        }
+        const audio = audioRef.current
+        audio.currentTime = 0
+
+        audio.ontimeupdate = () => {
+          if (audio.duration) {
+            setProgress(audio.currentTime / audio.duration)
+          }
+        }
+        audio.onended = () => {
+          setProgress(0)
+        }
+
+        audio.play().catch(() => {
+          // Autoplay may be blocked; ignore
+        })
+      }
+      playAudio()
     }
-  }, [isPlaying, variation.duration, variation.index])
+  }, [isPlaying, isMockAudio, isPrivateBlob, variation.audioUrl, variation.duration, variation.index])
 
   const handleMouseLeave = useCallback(() => {
     setIsHovering(false)
-    if (!isPlaying) {
+    if (isPlaying) return
+
+    if (isMockAudio) {
       toneRef.current?.stop()
       toneRef.current = null
-      if (progressRef.current) {
-        clearInterval(progressRef.current)
-        progressRef.current = null
-      }
-      setProgress(0)
+    } else if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.currentTime = 0
     }
-  }, [isPlaying])
+
+    if (progressRef.current) {
+      clearInterval(progressRef.current)
+      progressRef.current = null
+    }
+    setProgress(0)
+  }, [isPlaying, isMockAudio])
 
   return (
     <div

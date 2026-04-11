@@ -10,7 +10,11 @@ next.user-config.*
 # Environment variables
 .env*.local
 
+# Pipeline data (large JSON artifacts)
+scripts/data/
+
 # Common ignores
 node_modules
 .next/
 .DS_Store
+.vercel
