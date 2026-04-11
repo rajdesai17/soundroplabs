@@ -45,7 +45,7 @@ export default function SoundCard({
   const handleTryClick = () => {
     // Navigate to home with query pre-filled
     const params = new URLSearchParams({ q: sound.query })
-    router.push(`/?${params.toString()}`)
+    router.push(`/sfx?${params.toString()}`)
   }
 
   const getCategoryBadgeClass = (category: Category) => {
@@ -95,6 +95,20 @@ export default function SoundCard({
           barColor={isHovering ? '#444444' : '#2A2A2A'}
         />
       </div>
+
+      {/* Creator */}
+      {sound.creatorName && (
+        <div className="flex items-center gap-1.5 mb-3">
+          <div className="w-4 h-4 rounded-full bg-bg-elevated flex items-center justify-center">
+            <span className="font-mono text-[8px] text-text-tertiary">
+              {sound.creatorName.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <span className="font-mono text-[10px] text-text-tertiary">
+            {sound.creatorName}
+          </span>
+        </div>
+      )}
 
       {/* Bottom row */}
       <div className="flex items-center justify-between">

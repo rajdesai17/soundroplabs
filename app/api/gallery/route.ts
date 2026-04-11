@@ -40,8 +40,18 @@ export async function GET(request: NextRequest) {
 
     // Get jobs with their first variation for waveform/audio data
     const jobs = await db
-      .select()
+      .select({
+        id: schema.generationJobs.id,
+        query: schema.generationJobs.query,
+        category: schema.generationJobs.category,
+        duration: schema.generationJobs.duration,
+        playCount: schema.generationJobs.playCount,
+        createdAt: schema.generationJobs.createdAt,
+        userId: schema.generationJobs.userId,
+        creatorName: schema.users.name,
+      })
       .from(schema.generationJobs)
+      .leftJoin(schema.users, eq(schema.generationJobs.userId, schema.users.id))
       .where(and(...conditions))
       .orderBy(desc(schema.generationJobs.createdAt))
       .limit(limit)
@@ -66,6 +76,7 @@ export async function GET(request: NextRequest) {
           waveformData: (firstVar?.waveformData as number[]) ?? [],
           createdAt: job.createdAt,
           audioUrl: firstVar?.audioUrl,
+          creatorName: job.creatorName ?? undefined,
         }
       })
     )

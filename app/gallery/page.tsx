@@ -59,19 +59,20 @@ export default function GalleryPage() {
     <div className="min-h-screen bg-bg-base">
       <Navigation user={user} onSignInClick={() => setShowSignIn(true)} />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="font-serif text-4xl text-text-primary mb-2">
-            What people are hearing
-          </h1>
-          <div className="flex items-center gap-2">
-            <span className="w-1 h-1 rounded-full bg-sd-accent animate-pulse" />
-            <span className="font-mono text-xs text-text-secondary">
-              ↑ 3 new sounds in the last hour
-            </span>
-          </div>
-        </div>
+      {/* Mini Hero */}
+      <section className="px-4 pt-14 pb-8 text-center">
+        <p className="font-mono text-[10px] text-text-tertiary tracking-[0.25em] uppercase mb-3">
+          GALLERY
+        </p>
+        <h1 className="font-serif text-3xl md:text-4xl text-text-primary mb-2">
+          What people are creating
+        </h1>
+        <p className="font-sans text-sm text-text-secondary">
+          Browse AI-generated sounds from the SoundDrop community
+        </p>
+      </section>
+
+      <main className="max-w-7xl mx-auto px-4 py-4">
 
         {/* Category Tabs */}
         <div className="flex overflow-x-auto scrollbar-hide gap-1 mb-8 border-b border-border-default">
