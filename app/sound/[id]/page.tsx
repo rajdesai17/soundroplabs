@@ -7,6 +7,7 @@ import VariationCard from '@/components/shared/VariationCard'
 import { VariationCardGhost } from '@/components/shared/VariationCard'
 import NeighborList from '@/components/shared/NeighborList'
 import { Variation, Neighbor } from '@/lib/types'
+import { refinementOptions } from '@/lib/mockData'
 import { useSession } from 'next-auth/react'
 
 interface SoundData {
@@ -51,10 +52,12 @@ export default function SoundPermalinkPage() {
       })
   }, [id])
 
-  const handleGenerateSimilar = () => {
-    if (sound) {
-      router.push(`/?q=${encodeURIComponent(sound.query)}`)
-    }
+  const handleGenerateSimilar = (modifier?: string) => {
+    if (!sound) return
+    const q = modifier
+      ? `${sound.query} (${modifier.toLowerCase()})`
+      : sound.query
+    router.push(`/sfx?q=${encodeURIComponent(q)}`)
   }
 
   if (loading) {
@@ -96,10 +99,10 @@ export default function SoundPermalinkPage() {
             This sound may have been removed or the link is invalid.
           </p>
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/sfx')}
             className="font-sans text-sm text-sd-accent hover:text-accent-dim transition-colors"
           >
-            Go to home
+            Generate sounds
           </button>
         </div>
       </div>
@@ -150,7 +153,13 @@ export default function SoundPermalinkPage() {
                   }
                   onDownload={() => {
                     if (variation.audioUrl) {
-                      window.open(variation.audioUrl, '_blank')
+                      const url = variation.audioUrl.includes('.blob.vercel-storage.com')
+                        ? `/api/blob?url=${encodeURIComponent(variation.audioUrl)}`
+                        : variation.audioUrl
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `sounddrop-variation-${variation.index}.mp3`
+                      a.click()
                     }
                   }}
                   onFavorite={() => {
@@ -167,10 +176,22 @@ export default function SoundPermalinkPage() {
               ))}
             </div>
 
-            {/* Generate similar button */}
+            {/* Refinement options */}
             <div className="mt-6">
+              <div className="flex flex-wrap items-center gap-2 mb-4">
+                <span className="font-sans text-sm text-text-tertiary mr-1">Modify:</span>
+                {refinementOptions.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => handleGenerateSimilar(option)}
+                    className="font-mono text-xs text-text-secondary border border-border-default px-2.5 py-1 rounded hover:bg-bg-elevated hover:text-text-primary transition-colors"
+                  >
+                    {option} ↻
+                  </button>
+                ))}
+              </div>
               <button
-                onClick={handleGenerateSimilar}
+                onClick={() => handleGenerateSimilar()}
                 className="font-sans text-sm text-sd-accent hover:text-accent-dim transition-colors"
               >
                 Generate similar →

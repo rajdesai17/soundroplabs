@@ -2,11 +2,17 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { X } from 'lucide-react'
+import { X, Play, Pause } from 'lucide-react'
 import WaveformThumbnail from './WaveformThumbnail'
-import { formatDuration, formatPlayCount, playTone } from '@/lib/waveformUtils'
-import { getCardFrequency } from '@/lib/mockData'
+import { formatDuration, formatPlayCount } from '@/lib/waveformUtils'
 import { SoundEntry, Category } from '@/lib/types'
+
+function getPlayableUrl(audioUrl: string): string {
+  if (audioUrl.includes('.blob.vercel-storage.com')) {
+    return `/api/blob?url=${encodeURIComponent(audioUrl)}`
+  }
+  return audioUrl
+}
 
 interface SoundCardProps {
   sound: SoundEntry
@@ -27,38 +33,58 @@ export default function SoundCard({
 }: SoundCardProps) {
   const router = useRouter()
   const [isHovering, setIsHovering] = useState(false)
-  const toneRef = useRef<{ stop: () => void } | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  const handleMouseEnter = useCallback(() => {
-    setIsHovering(true)
-    // Play demo tone
-    const frequency = getCardFrequency(index)
-    toneRef.current = playTone(frequency, sound.duration)
-  }, [index, sound.duration])
+  const togglePlay = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
 
-  const handleMouseLeave = useCallback(() => {
-    setIsHovering(false)
-    toneRef.current?.stop()
-    toneRef.current = null
-  }, [])
+    if (!sound.audioUrl) return
 
-  const handleTryClick = () => {
-    // Navigate to home with query pre-filled
-    const params = new URLSearchParams({ q: sound.query })
-    router.push(`/sfx?${params.toString()}`)
-  }
+    if (isPlaying) {
+      audioRef.current?.pause()
+      setIsPlaying(false)
+      return
+    }
 
-  const getCategoryBadgeClass = (category: Category) => {
-    return 'font-mono text-[10px] tracking-wider text-text-tertiary border border-border-default px-2 py-0.5 rounded'
+    if (!audioRef.current) {
+      const url = getPlayableUrl(sound.audioUrl)
+      audioRef.current = new Audio(url)
+      audioRef.current.ontimeupdate = () => {
+        if (audioRef.current?.duration) {
+          setProgress(audioRef.current.currentTime / audioRef.current.duration)
+        }
+      }
+      audioRef.current.onended = () => {
+        setIsPlaying(false)
+        setProgress(0)
+      }
+      audioRef.current.onerror = () => {
+        setIsPlaying(false)
+        setProgress(0)
+      }
+    }
+
+    audioRef.current.play().catch(() => {
+      setIsPlaying(false)
+    })
+    setIsPlaying(true)
+  }, [isPlaying, sound.audioUrl])
+
+  const handleCardClick = () => {
+    // Navigate to sound permalink page
+    router.push(`/sound/${sound.id}`)
   }
 
   return (
     <div
-      className={`relative bg-bg-surface border rounded-lg p-4 transition-colors duration-100 ${
+      className={`relative bg-bg-surface border rounded-lg p-4 transition-colors duration-100 cursor-pointer ${
         isHovering ? 'border-border-hover' : 'border-border-default'
       }`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+      onClick={handleCardClick}
     >
       {/* Delete button (Library only) */}
       {showDelete && isHovering && (
@@ -75,7 +101,7 @@ export default function SoundCard({
 
       {/* Category Badge */}
       <div className="mb-3">
-        <span className={getCategoryBadgeClass(sound.category)}>
+        <span className="font-mono text-[10px] tracking-wider text-text-tertiary border border-border-default px-2 py-0.5 rounded">
           {sound.category.toUpperCase()}
         </span>
       </div>
@@ -91,8 +117,9 @@ export default function SoundCard({
           data={sound.waveformData}
           width={280}
           height={40}
-          animated={isHovering}
+          progress={isPlaying ? progress : 0}
           barColor={isHovering ? '#444444' : '#2A2A2A'}
+          progressColor="#E8F055"
         />
       </div>
 
@@ -113,6 +140,16 @@ export default function SoundCard({
       {/* Bottom row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 font-mono text-xs text-text-tertiary">
+          {/* Play button */}
+          {sound.audioUrl && (
+            <button
+              onClick={togglePlay}
+              className="w-6 h-6 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
+              aria-label={isPlaying ? 'Pause' : 'Play'}
+            >
+              {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+            </button>
+          )}
           <span>{formatDuration(sound.duration)}</span>
           {!showSavedDate && (
             <>
@@ -128,10 +165,13 @@ export default function SoundCard({
           )}
         </div>
         <button
-          onClick={handleTryClick}
+          onClick={(e) => {
+            e.stopPropagation()
+            router.push(`/sound/${sound.id}`)
+          }}
           className="font-sans text-xs text-sd-accent hover:text-accent-dim transition-colors"
         >
-          Try this →
+          Open →
         </button>
       </div>
     </div>

@@ -19,6 +19,7 @@ export interface SoundEntry {
   waveformData: number[] // array of 80 numbers 0-1
   createdAt: Date
   creatorName?: string
+  audioUrl?: string
 }
 
 export interface Variation {
