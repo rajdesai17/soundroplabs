@@ -12,7 +12,7 @@ interface ZoneBProps {
 }
 
 const statusMessages = [
-  'Searching 50,000 sounds...',
+  'Searching 26,264 sounds...',
   'Found 8 acoustic neighbors...',
   'Building generation prompt...',
   'Generating 4 variations...',

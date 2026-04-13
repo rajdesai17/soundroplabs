@@ -118,12 +118,12 @@ When user submits, Zone A smoothly transitions out (300ms fade+slide up). Zone B
 
 Status block:
 ```
-Searching 50,000 sounds...        ← DM Mono 14px #888, cycling
+Searching 26,264 sounds...        ← DM Mono 14px #888, cycling
 [████████░░░░░░░░░░] 40%          ← thin progress bar, #E8F055 fill
 ```
 
 Status messages cycle at 1s intervals:
-1. `Searching 50,000 sounds...`
+1. `Searching 26,264 sounds...`
 2. `Found 8 acoustic neighbors...`
 3. `Building generation prompt...`
 4. `Generating 4 variations...`

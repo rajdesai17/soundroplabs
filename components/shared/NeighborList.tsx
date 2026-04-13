@@ -23,7 +23,7 @@ export default function NeighborList({ neighbors, animating = false }: NeighborL
       {/* Footer */}
       <div className="pt-4 text-right">
         <p className="font-mono text-[10px] text-text-ghost">turbopuffer semantic search</p>
-        <p className="font-mono text-[10px] text-text-ghost">50,000 Freesound descriptions indexed</p>
+        <p className="font-mono text-[10px] text-text-ghost">26,264 Freesound descriptions indexed</p>
       </div>
     </div>
   )

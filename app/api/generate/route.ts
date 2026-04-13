@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
       try {
         if (useMock) {
           // Mock mode: same behavior as before for local dev without API keys
-          send({ stage: 0, message: 'Searching 50,000 sounds...' })
+          send({ stage: 0, message: 'Searching 26,264 sounds...' })
           await delay(1000)
           send({ stage: 1, message: 'Found 8 acoustic neighbors...', neighbors: mockNeighbors })
           await delay(1000)
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
           send({ stage: 4, message: 'Complete', variations: generateMockVariations() })
         } else {
           // --- Stage 0: Semantic search ---
-          send({ stage: 0, message: 'Searching 50,000 sounds...' })
+          send({ stage: 0, message: 'Searching 26,264 sounds...' })
 
           const embedding = await embedQuery(query)
 
