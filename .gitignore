@@ -16,6 +16,8 @@ scripts/data/
 # Skills / agents
 .agents/
 .claude/skills/
+# Local Claude Code permissions (never commit API keys)
+.claude/settings.local.json
 .continue/
 .kiro/
 .windsurf/
